@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <vector>
 #include <string>
 
@@ -20,7 +21,7 @@ void displayPackages(const vector<Package>& packages) {
     cout << "===================================" << endl;
     cout << "Available Packages:" << endl;
     cout << setw(10) << left << "Package ID" << setw(25) << left << "Package Name" << "Price (Rs.)" << endl;
-    
+
     for (const Package& package : packages) {
         cout << setw(10) << left << package.packageId << setw(25) << left << package.packageName << fixed << setprecision(2) << package.price << endl;
     }
@@ -53,9 +54,9 @@ int main() {
         {"SKNWTS06", "Warts", 4800.00},
         {"SKNSDT07", "Sensitive Skin Dermal Therapy", 10000.00}
     };
-    
+
     vector<int> quantities(packages.size(), 0); // Initialize quantities with 0
-    
+
     while (!loggedIn) {
         string inputUsername, inputPassword;
         cout << "=== Login ===" << endl;
@@ -63,7 +64,7 @@ int main() {
         cin >> inputUsername;
         cout << "Password: ";
         cin >> inputPassword;
-        
+
         if (inputUsername == username && inputPassword == password) {
             loggedIn = true;
             break;
@@ -71,7 +72,7 @@ int main() {
             cout << "Invalid username or password. Please try again." << endl;
         }
     }
-    
+
     if (loggedIn) {
         bool exitProgram = false;
         while (!exitProgram) {
@@ -82,18 +83,38 @@ int main() {
             cout << "3. Exit" << endl;
             cout << "Select an option: ";
             cin >> option;
-            
+
             switch (option) {
                 case 1: {
                     // Calculate the bill
                     double totalAmount = calculateBill(packages, quantities);
                     cout << "\nAmount Due\nRs." << fixed << setprecision(2) << totalAmount << endl;
+
+                    // Save the receipt to a file
+                    ofstream outputFile("receipt.txt");
+                    if (outputFile.is_open()) {
+                        outputFile << "*** Receipt ***" << endl;
+                        for (size_t i = 0; i < packages.size(); i++) {
+                            if (quantities[i] > 0) {
+                                outputFile << "Package ID: " << packages[i].packageId << endl;
+                                outputFile << "Package Name: " << packages[i].packageName << endl;
+                                outputFile << "Quantity: " << quantities[i] << endl;
+                                outputFile << "Subtotal: Rs." << fixed << setprecision(2) << packages[i].price * quantities[i] << endl;
+                                outputFile << endl;
+                            }
+                        }
+                        outputFile << "Total Amount Due: Rs." << fixed << setprecision(2) << totalAmount << endl;
+                        outputFile.close();
+                        cout << "Receipt saved to receipt.txt" << endl;
+                    } else {
+                        cout << "Unable to open the receipt.txt file for writing." << endl;
+                    }
                     break;
                 }
                 case 2: {
                     // View available packages
                     displayPackages(packages);
-                    
+
                     // Allow the user to select package quantities
                     for (size_t i = 0; i < packages.size(); i++) {
                         int quantity;
@@ -114,8 +135,8 @@ int main() {
             cout << endl;
         }
     }
-    
+
     cout << "Thank you for using the Chrystal Skin Clinic Billing System. Goodbye!" << endl;
-    
+
     return 0;
 }
